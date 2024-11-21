@@ -4,33 +4,46 @@ import {
   InteractionType,
   InteractionResponseType,
   verifyKeyMiddleware,
+  MessageComponentTypes,
 } from 'discord-interactions';
 import { getRandomEmoji } from './utils.js';
 
-// Create an express app
+// --Setup--
 const app = express();
-// Get port, or default to 3000
 const PORT = process.env.PORT || 3000;
+// --Setup-- END
 
-/**
- * Interactions endpoint URL where Discord will send HTTP requests
- * Parse request body and verifies incoming requests using discord-interactions package
- */
+// --Routes--
 app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async function (req, res) {
-  // Interaction type and data
+  // --Parse request body--
   const { type, data } = req.body;
+  const custom_id = data.custom_id;
+  console.log("type", type);
+  // --Parse request body-- END
 
-  /**
-   * Handle verification requests
-   */
+
+  // --Handle TYPE 1--
   if (type === InteractionType.PING) {
     return res.send({ type: InteractionResponseType.PONG });
   }
+  // --Handle TYPE 1-- END
 
-  /**
-   * Handle slash command requests
-   * See https://discord.com/developers/docs/interactions/application-commands#slash-commands
-   */
+  // --Handle TYPE 3-- [Message Components]
+  if (type === InteractionType.MESSAGE_COMPONENT) {
+
+    const componentId = data.custom_id;
+
+    if (componentId.startsWith('incomming_item_')) {
+      return res.send({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: { content: resultStr },
+      });
+    }
+  }
+  // --Handle TYPE 3-- END
+
+
+  // --Handle TYPE 2-- [Slash Commands]
   if (type === InteractionType.APPLICATION_COMMAND) {
     const { name } = data;
 
@@ -45,15 +58,70 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
         },
       });
     }
-
+    if (name === 'send-item') {
+      const user = data.options?.[0]?.value;
+      try {
+        // Send a modal to the user to input the item name
+        return res.send({
+          
+          type: InteractionResponseType.MODAL,
+          data: {
+            custom_id: `send_item_modal_${user}`,
+            title: 'Send Item',
+            components: [
+              {
+                type: MessageComponentTypes.ACTION_ROW,
+                components: [
+                  {
+                    type: MessageComponentTypes.INPUT_TEXT,
+                    placeholder: 'Item Name',
+                    custom_id: `item_name_${user}`,
+                    style: 1,
+                    label: 'Item Name',
+                    required: true,
+                    value: 'Item Name',
+                  },
+                ],
+              },
+            ],
+          },
+        });
+      } catch (error) {
+        console.error('Error sending modal', error);
+        return res.status(500).json({ error: 'Error sending modal' });
+      }
+    }
     console.error(`unknown command: ${name}`);
     return res.status(400).json({ error: 'unknown command' });
   }
 
+  if (type === InteractionType.MODAL_SUBMIT) {
+    if (custom_id.startsWith('send_item_modal_')) {
+      const userId = custom_id.replace('send_item_modal_', '');
+    
+      const itemName =  data.components[0].components[0].value;
+      return res.send({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+          content: `Item ${itemName} sent to user ${userId}`,
+        },
+      });
+    }
+  }
+
+  // --Handle TYPE 2-- END
   console.error('unknown interaction type', type);
   return res.status(400).json({ error: 'unknown interaction type' });
 });
 
+
+// --Routes-- END
+
 app.listen(PORT, () => {
   console.log('Listening on port', PORT);
+});
+
+
+app.get('/', (req, res) => {
+  res.send('Hello World!');
 });
