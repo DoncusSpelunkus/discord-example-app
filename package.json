@@ -16,10 +16,17 @@
   "author": "Shay DeWael",
   "license": "MIT",
   "dependencies": {
+    "@langchain/community": "^0.3.16",
+    "@langchain/core": "^0.3.19",
+    "@langchain/mistralai": "^0.2.0",
+    "@langchain/ollama": "^0.1.2",
+    "cheerio": "^1.0.0",
     "discord-interactions": "^4.0.0",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
-    "node-fetch": "^3.3.2"
+    "langchain": "^0.3.6",
+    "node-fetch": "^3.3.2",
+    "openai": "^4.73.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.0"
