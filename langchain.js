@@ -1,35 +1,37 @@
-import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { OllamaEmbeddings } from "@langchain/ollama";
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { ChatOllama } from "@langchain/ollama";
+
+const dndApi = "https://www.dnd5eapi.co/api/"
+
 
 const ollamaLlm = new ChatOllama({
   baseUrl: "http://localhost:11434", // Default value
-  model: "llama3.2", // Default value
+  model: "hf.co/Kathurjan/MistralDNDfinetuned", // Default value
 });
 
-const loader = new CheerioWebBaseLoader(
-  "https://lilianweng.github.io/posts/2023-06-23-agent/"
-);
+export async function invoke(userMessage) {
+  try {
+    // Get the response from the LLM
+    const llmResponse = await ollamaLlm.invoke(userMessage);
 
-const docs = await loader.load();
+    // Extract content from LLM response
+    const apiEndpoint = llmResponse.content.trim(); // Ensure clean endpoint
+    console.log("Generated API Endpoint:", apiEndpoint);
 
-const textSplitter = new RecursiveCharacterTextSplitter({
-  chunkSize: 500,
-  chunkOverlap: 0,
-});
-const allSplits = await textSplitter.splitDocuments(docs);
-console.log(allSplits.length);
+    // Make the API call dynamically
+    const apiResponse = await fetch(`${dndApi}${apiEndpoint}`, {
+      method: "GET", // Adjust the method and options as per the API requirements
+    });
 
-// const embeddings = new OllamaEmbeddings();
+    if (!apiResponse.ok) {
+      throw new Error(`API call failed with status: ${apiResponse.status}`);
+    }
 
-// const vectorStore = await MemoryVectorStore.fromDocuments(allSplits, embeddings);
+    const data = await apiResponse.json();
+    console.log("API Response:", data);
 
-// const question = "What are the approaches to Task Decomposition?";
-// docs = await vectorStore.similaritySearch(question);
-
-const response = await ollamaLlm.invoke(
-  "Simulate a rap battle between Stephen Colbert and John Oliver"
-);
-console.log(response.content);
+    return data;
+  } catch (error) {
+    console.error("Error in invoke function:", error);
+    return "error in invoke"
+  }
+}
