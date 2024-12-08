@@ -1,12 +1,16 @@
+import { SystemMessage } from "@langchain/core/messages";
 import { ChatOllama } from "@langchain/ollama";
 
-const dndApi = "https://www.dnd5eapi.co/api/"
+const dndApi = "https://www.dnd5eapi.co"
 
 
 const ollamaLlm = new ChatOllama({
   baseUrl: "http://localhost:11434", // Default value
-  model: "hf.co/Kathurjan/MistralDNDfinetuned", // Default value
+  model: "MarcusDnDexperiment3:latest", // Default value
 });
+
+
+
 
 export async function invoke(userMessage) {
   try {
@@ -15,8 +19,8 @@ export async function invoke(userMessage) {
 
     // Extract content from LLM response
     const apiEndpoint = llmResponse.content.trim(); // Ensure clean endpoint
-    console.log("Generated API Endpoint:", apiEndpoint);
-
+    console.log(apiEndpoint);
+    console.log(`${dndApi}${apiEndpoint}`)
     // Make the API call dynamically
     const apiResponse = await fetch(`${dndApi}${apiEndpoint}`, {
       method: "GET", // Adjust the method and options as per the API requirements
@@ -27,6 +31,8 @@ export async function invoke(userMessage) {
     }
 
     const data = await apiResponse.json();
+
+    
     console.log("API Response:", data);
 
     return data;
