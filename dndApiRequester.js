@@ -8,4 +8,3 @@ function asyncFetch(append) {
         .then(data => data)
         .catch(error => console.error('Error:', error));
 }
-

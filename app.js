@@ -7,7 +7,7 @@ import {
   MessageComponentTypes,
 } from 'discord-interactions';
 import { getRandomEmoji } from './utils.js';
-import { invoke } from './langchain.js'
+import { llmInvocation } from './langchain.js'
 
 // --Setup--
 const app = express();
@@ -100,7 +100,7 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
     if (custom_id.startsWith('send_item_modal_')) {
       const userId = custom_id.replace('send_item_modal_', '');
       const itemName =  data.components[0].components[0].value;
-      let response = await invoke(itemName)
+      let response = await llmInvocation(itemName)
 
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
