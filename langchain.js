@@ -19,7 +19,7 @@ dotenv.config();
 const dndApi = "https://www.dnd5eapi.co"
 
 const fetchDoc = async (input) => {
-  const loader = new CheerioWebBaseLoader(`${dndApi}/api/equipment/${input}`);
+  const loader = new CheerioWebBaseLoader(`${dndApi}${input}`);
 
   return await loader.load();
 }
@@ -68,7 +68,7 @@ const createConvertChain = async () => {
   });
 
   const prompt = ChatPromptTemplate.fromTemplate(
-    "You will receive information on an item and you should format the information and send it to the channel"
+    `You are a conversion tool, you should format the {input} into a valid api endpoint like "api/equipment/longsword" and return nothing else.`
   );
 
   const chain = prompt.pipe(fetcher);
@@ -82,18 +82,18 @@ const respondChain = await createRespondChain();
 const convertChain = await createConvertChain();
 
 export async function llmInvocation(userInput) {
+  console.log(userInput);
   const convertedUserinput = await convertChain.invoke({
     input: `${userInput}`
   })
 
   console.log(convertedUserinput.content);
 
-  const doc = await fetchDoc(convertedUserinput.content);
+  const doc = await fetchDoc(convertedUserinput.content.trim());
   
-
   console.log(doc);
 
   await respondChain.invoke({
-    input: `${doc}`
+    input: `${doc[0].pageContent}`
   })
 }
