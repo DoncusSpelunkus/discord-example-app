@@ -68,7 +68,7 @@ const createRespondChain = async (doc) => {
     model: "llama3.2:latest", // Default value
     MAX_TOKENS: 1000,
     temperature: 0,
-  });
+  }); 
 
   const sendTool = new DiscordSendMessagesTool(process.env.DISCORD_BOT_TOKEN, process.env.DISCORD_CHANNEL_ID);
 
