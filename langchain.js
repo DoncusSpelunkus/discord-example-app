@@ -82,17 +82,12 @@ const respondChain = await createRespondChain();
 const convertChain = await createConvertChain();
 
 export async function llmInvocation(userInput) {
-  console.log(userInput);
   const convertedUserinput = await convertChain.invoke({
     input: `${userInput}`
   })
 
-  console.log(convertedUserinput.content);
-
   const doc = await fetchDoc(convertedUserinput.content.trim());
   
-  console.log(doc);
-
   await respondChain.invoke({
     input: `${doc[0].pageContent}`
   })
